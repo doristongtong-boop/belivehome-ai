@@ -1,48 +1,6 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-  <meta charset="utf-8">
-  <title>BeliveHome AI 助手</title>
-  <style>
-    body { font-family: sans-serif; margin: 20px; }
-    .card { max-width: 600px; margin: auto; border: 1px solid #ccc; border-radius: 8px; padding: 16px; }
-    .row { display: flex; gap: 8px; }
-    input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; }
-    button { padding: 8px 12px; border: none; border-radius: 6px; background: #4CAF50; color: white; cursor: pointer; }
-    #out { margin-top: 12px; padding: 10px; border: 1px solid #eee; border-radius: 6px; background: #fafafa; min-height: 60px; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h3>🤖 BeliveHome AI 助手</h3>
-    <div class="row">
-      <input id="q" placeholder="请输入问题…" />
-      <button onclick="ask()">发送</button>
-    </div>
-    <div id="out">提示：输入问题后点击“发送”</div>
-  </div>
 
-<script>
-async function ask() {
-  const q = document.getElementById('q').value;
-  const out = document.getElementById('out');
-  out.textContent = "⏳ 查询中…";
-  try {
-    const r = await fetch('/api/chat', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: q })
-    });
-    const data = await r.json();
-    if (data.reply) {
-      out.innerHTML = data.reply.replace(/\n/g,'<br>');
-    } else {
-      out.textContent = "❌ " + (data.error || "未知错误");
-    }
-  } catch (e) {
-    out.textContent = "❌ 出错: " + e.message;
-  }
+if (data.reply) {
+  out.innerHTML = data.reply.replace(/\n/g,'<br>');
+} else {
+  out.textContent = "❌ " + JSON.stringify(data);  // 显示完整报错
 }
-</script>
-</body>
-</html>
