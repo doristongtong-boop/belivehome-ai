@@ -1,4 +1,4 @@
-// api/chat.js  —— CommonJS & Vercel Serverless 兼容
+// api/chat.js — Vercel (CommonJS) 版本
 module.exports = async function handler(req, res) {
   try {
     if (req.method !== "POST") {
@@ -6,13 +6,12 @@ module.exports = async function handler(req, res) {
       return res.status(405).json({ error: "Only POST allowed" });
     }
 
-    // 有些环境下 req.body 可能是字符串，这里做个兜底
+    // 兼容某些环境 body 是字符串
     let body = req.body;
     if (typeof body === "string") {
-      try { body = JSON.parse(body); } catch (_) { /* ignore */ }
+      try { body = JSON.parse(body); } catch (_) {}
     }
     const message = body && typeof body.message === "string" ? body.message : "";
-
     if (!message) {
       return res.status(400).json({ error: "Missing 'message' in request body" });
     }
@@ -31,12 +30,13 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({
         model: "gpt-4o-mini",
         messages: [{ role: "user", content: message }],
-    })});
+      }),
+    });
 
     const payload = await oaRes.json();
 
     if (!oaRes.ok) {
-      // 把 OpenAI 的错误透出来，方便你在页面/日志看到具体原因
+      // 打印到函数日志，同时把 OpenAI 的报错透出给前端
       console.error("OpenAI API error:", payload);
       return res.status(oaRes.status || 502).json({ error: "OpenAI error", details: payload });
     }
@@ -48,6 +48,7 @@ module.exports = async function handler(req, res) {
     }
 
     return res.status(200).json({ reply: text });
+
   } catch (err) {
     console.error("Server error:", err);
     return res.status(500).json({ error: "Server error", details: String(err) });
