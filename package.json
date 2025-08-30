@@ -1,3 +1,23 @@
-"engines": {
-  "node": "20.x"
+{
+  "name": "belivehome-ai",
+  "version": "1.0.0",
+  "description": "BeliveHome AI Assistant project",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "start": "node index.js",
+    "build": "echo 'Nothing to build'"
+  },
+  "keywords": [
+    "belivehome",
+    "ai",
+    "assistant",
+    "vercel"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "engines": {
+    "node": "20.x"
+  },
+  "dependencies": {}
 }
