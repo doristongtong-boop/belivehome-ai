@@ -2,166 +2,153 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BeliveHome AI Assistant</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root{--bg:#f6f7f9;--card:#fff;--text:#111;--muted:#6b7280;--brand:#22c55e}
-    *{box-sizing:border-box} body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-    .wrap{max-width:860px;margin:36px auto;padding:0 16px}
-    .card{background:var(--card);border-radius:16px;box-shadow:0 6px 24px rgba(0,0,0,.06);padding:20px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-    h1{margin:0;font-size:24px}
-    .lang{display:flex;gap:8px;align-items:center}
-    select{padding:6px 10px;border:1px solid #e5e7eb;border-radius:8px;background:#fff}
-    .chat{display:flex;flex-direction:column;gap:10px;margin:12px 0 14px;max-height:60vh;overflow:auto;padding-right:6px}
-    .bubble{padding:12px 14px;border-radius:14px;max-width:85%;line-height:1.5;white-space:pre-wrap}
-    .user{align-self:flex-end;background:#e8f8ee}
-    .bot{align-self:flex-start;background:#f3f4f6}
-    .row{display:flex;gap:10px}
-    .ipt{flex:1;padding:12px 14px;border:1px solid #e5e7eb;border-radius:12px;outline:none;font-size:16px}
-    .btn{background:var(--brand);color:#fff;border:0;padding:0 18px;border-radius:12px;font-size:16px;cursor:pointer}
-    .btn[disabled]{opacity:.6;cursor:not-allowed}
-    .muted{color:var(--muted);font-size:13px;margin-top:8px}
-    .typing{display:inline-flex;gap:4px;align-items:center}
-    .typing span{width:6px;height:6px;border-radius:999px;background:#9ca3af;animation:blink 1.2s infinite}
-    .typing span:nth-child(2){animation-delay:.2s}.typing span:nth-child(3){animation-delay:.4s}
-    @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    .chat-box {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 20px;
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    #langSwitch {
+      float: right;
+      margin-bottom: 10px;
+    }
+    #messages {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      margin-bottom: 15px;
+    }
+    .msg {
+      margin: 8px 0;
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+    .user {
+      background: #e0f7fa;
+      text-align: right;
+    }
+    .bot {
+      background: #f1f1f1;
+      text-align: left;
+    }
+    #inputArea {
+      display: flex;
+      gap: 10px;
+    }
+    #text {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="card">
-      <div class="topbar">
-        <h1 id="title">🤖 BeliveHome AI Assistant</h1>
-        <div class="lang">
-          <label for="langSel" id="langLabel">Language</label>
-          <select id="langSel">
-            <option value="en">English</option>
-            <option value="zh">中文</option>
-          </select>
-        </div>
+  <div class="chat-box">
+    <h2>🤖 BeliveHome AI Assistant</h2>
+    <select id="langSwitch" onchange="switchLang()">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+    </select>
+    <div id="messages">
+      <div class="msg bot" id="welcome">
+        Hello! I'm BeliveHome's AI assistant. I can help with renovation, waterproofing, and material selection.
       </div>
-
-      <div id="chat" class="chat"></div>
-
-      <div class="row">
-        <input id="q" class="ipt" placeholder="Type your question…" />
-        <button id="send" class="btn">Send</button>
-      </div>
-      <div class="muted" id="hint">Note: Do not enter sensitive information. AI responses are for reference only.</div>
     </div>
+    <div id="inputArea">
+      <input id="text" type="text" placeholder="Type your question..." />
+      <button id="sendBtn" onclick="send()">Send</button>
+    </div>
+    <p style="font-size: 12px; color: gray; margin-top: 10px;" id="note">
+      Note: Do not enter sensitive information. AI responses are for reference only.
+    </p>
   </div>
 
-<script>
-/** === Configuration === **/
-const API_URL = 'https://belivehome-ai.vercel.app/api/chat'; // 若与后端同域，可改为 '/api/chat'
-
-/** === i18n strings === **/
-const STR = {
-  en: {
-    title: "🤖 BeliveHome AI Assistant",
-    language: "Language",
-    placeholder: "Type your question…",
-    send: "Send",
-    hint: "Note: Do not enter sensitive information. AI responses are for reference only.",
-    hello: "Hello! I'm BeliveHome's AI assistant. I can help with renovation, waterproofing, and material selection.",
-    thinking: "AI is thinking…",
-    netErr: msg => "❌ Network error: " + msg,
-    quota: "❌ Insufficient quota: please add billing or use a key with credits.",
-    sysPrompt: "You are BeliveHome's renovation & waterproofing consultant. Be professional and friendly. Keep answers concise with steps or checklists when helpful."
-  },
-  zh: {
-    title: "🤖 BeliveHome AI 助手",
-    language: "语言",
-    placeholder: "请输入问题…",
-    send: "发送",
-    hint: "提示：请勿输入隐私信息。AI 回答仅供参考。",
-    hello: "你好！我是 BeliveHome 的 AI 助手，可回答装修、防水、材料选择等问题。",
-    thinking: "正在思考…",
-    netErr: msg => "❌ 网络错误：" + msg,
-    quota: "❌ 余额不足：请在 OpenAI Billing 里充值或更换有额度的密钥。",
-    sysPrompt: "你是 BeliveHome 的装修与防水顾问，说话专业但亲切。回答尽量简洁，必要时给步骤或清单。"
-  }
-};
-
-let lang = localStorage.getItem('bh_lang') || 'en';
-const chatEl = document.getElementById('chat');
-const qEl = document.getElementById('q');
-const sendBtn = document.getElementById('send');
-const langSel = document.getElementById('langSel');
-
-langSel.value = lang;
-applyLang();
-appendBubble(STR[lang].hello, 'bot');
-
-langSel.addEventListener('change', () => {
-  lang = langSel.value;
-  localStorage.setItem('bh_lang', lang);
-  applyLang();
-  appendBubble(STR[lang].hello, 'bot');
-});
-sendBtn.addEventListener('click', send);
-qEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
-
-function applyLang(){
-  document.getElementById('title').textContent = STR[lang].title;
-  document.getElementById('langLabel').textContent = STR[lang].language;
-  qEl.placeholder = STR[lang].placeholder;
-  sendBtn.textContent = STR[lang].send;
-  document.getElementById('hint').textContent = STR[lang].hint;
-}
-function appendBubble(text, role){
-  const div = document.createElement('div');
-  div.className = 'bubble ' + (role === 'user' ? 'user' : 'bot');
-  div.innerHTML = (text || '').replace(/\n/g,'<br>');
-  chatEl.appendChild(div);
-  chatEl.scrollTop = chatEl.scrollHeight;
-  return div;
-}
-function showTyping(){
-  const wrap = document.createElement('div');
-  wrap.className = 'bubble bot';
-  wrap.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
-  chatEl.appendChild(wrap);
-  chatEl.scrollTop = chatEl.scrollHeight;
-  return wrap;
-}
-
-async function send(){
-  const text = qEl.value.trim();
-  if (!text) return;
-  qEl.value = '';
-  appendBubble(text, 'user');
-  const typing = showTyping();
-  sendBtn.disabled = true;
-
-  try {
-    const r = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      // 为不改后端，这里把 system prompt 附在 message 后；若要上下文对话，可扩展后端 messages
-      body: JSON.stringify({ message: `${text}\n\n(System Prompt: ${STR[lang].sysPrompt})` })
-    });
-    const data = await r.json();
-    typing.remove();
-
-    if (data.reply) {
-      appendBubble(data.reply, 'bot');
-    } else {
-      const code = data?.details?.error?.code;
-      if (code === 'insufficient_quota') {
-        appendBubble(STR[lang].quota, 'bot');
-      } else {
-        appendBubble('❌ ' + (data?.error || JSON.stringify(data)), 'bot');
+  <script>
+    let currentLang = "en";
+    const translations = {
+      en: {
+        welcome: "Hello! I'm BeliveHome's AI assistant. I can help with renovation, waterproofing, and material selection.",
+        placeholder: "Type your question...",
+        send: "Send",
+        note: "Note: Do not enter sensitive information. AI responses are for reference only.",
+        error: "Error",
+        network: "Network error"
+      },
+      zh: {
+        welcome: "你好！我是 BeliveHome 的 AI 助手，可以回答装修/防水/材料选择等问题。",
+        placeholder: "请输入你的问题...",
+        send: "发送",
+        note: "注意：请勿输入敏感信息。AI 回复仅供参考。",
+        error: "错误",
+        network: "网络错误"
       }
+    };
+
+    function switchLang() {
+      currentLang = document.getElementById("langSwitch").value;
+      document.getElementById("welcome").innerText = translations[currentLang].welcome;
+      document.getElementById("text").placeholder = translations[currentLang].placeholder;
+      document.getElementById("sendBtn").innerText = translations[currentLang].send;
+      document.getElementById("note").innerText = translations[currentLang].note;
     }
-  } catch (e) {
-    typing.remove();
-    appendBubble(STR[lang].netErr(e.message), 'bot');
-  } finally {
-    sendBtn.disabled = false;
-  }
-}
-</script>
+
+    async function send() {
+      const input = document.getElementById("text");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const messagesDiv = document.getElementById("messages");
+      messagesDiv.innerHTML += `<div class="msg user">${msg}</div>`;
+      input.value = "";
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: msg })
+        });
+
+        const data = await response.json();
+        if (data.reply) {
+          messagesDiv.innerHTML += `<div class="msg bot">${data.reply}</div>`;
+        } else {
+          messagesDiv.innerHTML += `<div class="msg bot">❌ ${translations[currentLang].error}: ${JSON.stringify(data)}</div>`;
+        }
+      } catch (err) {
+        messagesDiv.innerHTML += `<div class="msg bot">❌ ${translations[currentLang].network}: ${err.message}</div>`;
+      }
+
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+  </script>
 </body>
 </html>
