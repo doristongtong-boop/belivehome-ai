@@ -1,1 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BeliveHome AI Assistant</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 600px;
+      padding: 20px;
+    }
+    h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    .chat-box {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      height: 300px;
+      overflow-y: auto;
+      background: #fafafa;
+      margin-bottom: 10px;
+    }
+    .chat-msg {
+      margin: 6px 0;
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+    .user {
+      background: #d4f4d7;
+      text-align: right;
+    }
+    .bot {
+      background: #f0f0f0;
+      text-align: left;
+    }
+    .input-row {
+      display: flex;
+      gap: 8px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 10px 18px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .lang-switch {
+      text-align: right;
+      margin-bottom: 8px;
+    }
+    .lang-switch button {
+      background: #007bff;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2 id="title">🤖 BeliveHome AI Assistant</h2>
+    <div class="lang-switch">
+      <span id="lang-label">Language:</span>
+      <button onclick="setLang('en')">English</button>
+      <button onclick="setLang('zh')">中文</button>
+    </div>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="input-row">
+      <input type="text" id="user-input" placeholder="Type your question..." />
+      <button onclick="sendMessage()" id="send-btn">Send</button>
+    </div>
+    <small id="note">Note: Do not enter sensitive information. AI responses are for reference only.</small>
+  </div>
 
+  <script>
+    let lang = "en"; // 默认英文
+    const translations = {
+      en: {
+        title: "🤖 BeliveHome AI Assistant",
+        placeholder: "Type your question...",
+        send: "Send",
+        note: "Note: Do not enter sensitive information. AI responses are for reference only.",
+        botHello: "Hello! I'm BeliveHome's AI assistant. I can help with renovation, waterproofing, and material selection."
+      },
+      zh: {
+        title: "🤖 BeliveHome AI 助手",
+        placeholder: "请输入您的问题...",
+        send: "发送",
+        note: "注意：请勿输入敏感信息。AI 回复仅供参考。",
+        botHello: "您好！我是 BeliveHome 的 AI 助手，可以帮您解答装修、防水、材料选择等问题。"
+      }
+    };
+
+    function setLang(l) {
+      lang = l;
+      document.getElementById("title").textContent = translations[l].title;
+      document.getElementById("user-input").placeholder = translations[l].placeholder;
+      document.getElementById("send-btn").textContent = translations[l].send;
+      document.getElementById("note").textContent = translations[l].note;
+      document.getElementById("chat-box").innerHTML = `<div class="chat-msg bot">${translations[l].botHello}</div>`;
+    }
+
+    async function sendMessage() {
+      const input = document.getElementById("user-input");
+      const msg = input.value.trim();
+      if (!msg) return;
+
+      const chatBox = document.getElementById("chat-box");
+      chatBox.innerHTML += `<div class="chat-msg user">${msg}</div>`;
+      input.value = "";
+      chatBox.scrollTop = chatBox.scrollHeight;
+
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({ message: msg })
+        });
+        const data = await res.json();
+        if (data.reply) {
+          chatBox.innerHTML += `<div class="chat-msg bot">${data.reply}</div>`;
+        } else {
+          chatBox.innerHTML += `<div class="chat-msg bot">⚠️ Error: ${JSON.stringify(data)}</div>`;
+        }
+        chatBox.scrollTop = chatBox.scrollHeight;
+      } catch (err) {
+        chatBox.innerHTML += `<div class="chat-msg bot">⚠️ Network error: ${err.message}</div>`;
+      }
+    }
+
+    // 默认英文
+    setLang("en");
+  </script>
+</body>
+</html>
